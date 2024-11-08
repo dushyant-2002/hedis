@@ -15,6 +15,7 @@ import Database.Redis.Core
 import Database.Redis.Protocol
 import Database.Redis.Types
 import qualified Database.Redis.Cluster.Command as CMD
+import Control.Monad.IO.Class (liftIO)
 
 
 objectRefcount
@@ -653,17 +654,10 @@ geosearchWithOpts
     -> GeoBy       -- ^ Search shape: radius or bounding box.
     -> GeoSearchOpts -- ^ Options
     -> m (f [(ByteString, ByteString)])  -- ^ Search results.
-geosearchWithOpts key from by GeoSearchOpts{..} =
-    sendRequestForGeo $ concat 
-        [ ["GEOSEARCH", key]
-        , encodeArgs from
-        , encodeArgs by
-        , maybe [] encodeArgs order
-        , maybe [] encodeArgs fetchCount
-        , ["WITHCOORD" | withCoord]
-        , ["WITHDIST" | withDist]
-        , ["WITHHASH" | withHash]
-        ]
+geosearchWithOpts key from by GeoSearchOpts{..} = do
+    let cliCommand = concat [ ["GEOSEARCH", key], encodeArgs from, encodeArgs by, maybe [] encodeArgs order, maybe [] encodeArgs fetchCount, ["WITHCOORD" | withCoord], ["WITHDIST" | withDist], ["WITHHASH" | withHash]]
+    liftIO $ putStrLn $ "Sending command: " ++ show cliCommand
+    sendRequestForGeo cliCommand
 data GeoSearchOpts = GeoSearchOpts
     { order      :: Maybe OrderOption       -- ^ Order of the results: ASC or DESC
     , fetchCount :: Maybe CountOption       -- ^ Count option for the number of results
