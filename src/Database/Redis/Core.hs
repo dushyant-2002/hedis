@@ -128,6 +128,7 @@ sendRequest req = do
 sendRequestForGeo :: (RedisCtx m f, RedisResult a, MonadIO m)
     => [B.ByteString] -> m (f a)
 sendRequestForGeo req = do
+    liftIO $ putStrLn $ "Decoded response Start: "
     r' <- liftRedis $ Redis $ do
         env <- ask
         case env of
